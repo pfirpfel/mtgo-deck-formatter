@@ -1,0 +1,25 @@
+{
+  "name": "mtgo-deck-formatter",
+  "version": "1.0.0",
+  "description": "Formats and checks the format of MTGO txt deck lists",
+  "main": "format.js",
+  "bin" : {
+    "mtgo-deck-formatter": "./format.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pfirpfel/mtgo-deck-formatter.git"
+  },
+  "keywords": [
+    "mtgo"
+  ],
+  "author": "Michael Kuenzli",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/pfirpfel/mtgo-deck-formatter/issues"
+  },
+  "homepage": "https://github.com/pfirpfel/mtgo-deck-formatter#readme"
+}
