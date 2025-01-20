@@ -1,15 +1,17 @@
 #!/usr/bin/env node
 
-const path = require('path');
-const fs = require('fs');
+import { resolve } from 'node:path';
+
+import { access, readFile, writeFile, constants } from 'node:fs/promises';
 
 function usage() {
   const usage = `Formats mtgo txt deck lists
-Usage: node format.js [-h] [-c] [-p] decklist.txt another-list.txt ...
-Default behaviour overwrites the supplied files with their formatted version.
+Usage: node format.js [-h] [-c] [-p] [-w] decklist.txt another-list.txt ...
+
 -h, --help: show this help text
 -c, --check: check format of all supplied decklists, exits with error if at least one list has invalid format
--p, --print: only print, don't overwrite deck list
+-p, --print: print formatted list and exit
+-w, --write: overwrites the supplied files with their formatted version
 `;
   console.log(usage);
 }
@@ -65,60 +67,95 @@ function handleArguments() {
     process.exit();
   }
 
-  let arguments = process.argv.slice(2);
-  if (arguments[0] === '-h' || arguments[0] === '--help') {
+  let args = process.argv.slice(2);
+  if (args[0] === '-h' || args[0] === '--help') {
     usage();
     process.exit();
   }
 
   let checkFormat = false;
-  if (arguments[0] === '-c' || arguments[0] === '--check') {
+  if (args[0] === '-c' || args[0] === '--check') {
     checkFormat = true;
-    arguments = arguments.slice(1);
+    args = args.slice(1);
   }
 
   let onlyPrintFormatted = false;
-  if (arguments[0] === '-p' || arguments[0] === '--print') {
+  if (args[0] === '-p' || args[0] === '--print') {
     onlyPrintFormatted = true;
-    arguments = arguments.slice(1);
+    args = args.slice(1);
   }
 
+  let writeDecklists = false;
+  if (args[0] === '-w' || args[0] === '--write') {
+    writeDecklists = true;
+    args = args.slice(1);
+  }
+
+  let filePaths = args;
+
   return {
-    arguments,
+    filePaths,
     checkFormat,
-    onlyPrintFormatted
+    onlyPrintFormatted,
+    writeDecklists
   };
 }
 
-const {arguments, checkFormat, onlyPrintFormatted} = handleArguments();
-
-let formatValid = true;
-for (let filepath of arguments) {
-  const resolvedPath = path.resolve(filepath);
-  // check if file exists
+async function canAccess(path) {
   try {
-    fs.accessSync(resolvedPath, fs.F_OK);
+    await access(path, constants.R_OK | constants.W_OK);
+    return true;
   } catch (err) {
-    console.warn(`${filepath} does not exist or can't be accessed`);
-    continue;
-  }
-  try {
-    const fileContent = fs.readFileSync(resolvedPath, 'utf8');
-    const formatted = format(fileContent);
-    if (onlyPrintFormatted) {
-      console.log(formatted);
-    } else if (checkFormat){
-      if (fileContent.localeCompare(formatted) !== 0) {
-        console.warn(`Format invalid: ${filepath}`);
-        formatValid = false;
-      }
-    } else {
-      fs.writeFileSync(resolvedPath, formatted, 'utf8');
-    }
-  } catch (err) {
-    console.error(err)
+    console.error(err);
+    console.error(`Cannot access: ${path}`);
+    return false;
   }
 }
 
-let exitCode = (checkFormat && !formatValid) ? 1 : 0;
-process.exit(exitCode);
+async function checkFile(filePath) {
+  const fileContent = await readFile(filePath, { encoding: 'utf8' });
+  const formatted = format(fileContent);
+  const valid = fileContent.localeCompare(formatted) === 0;
+
+  return {
+    filePath,
+    formatted,
+    valid
+  }
+}
+
+async function main(){
+  const { filePaths, checkFormat, onlyPrintFormatted, writeDecklists} = handleArguments();
+
+  // get absolute paths
+  const resolvedPaths = filePaths.map(p => resolve(p));
+
+  // check if files are accessible
+  const canAccessPaths = await Promise.all(resolvedPaths.map(canAccess));
+  if (canAccessPaths.includes(false)) {
+    return 1;
+  }
+
+  // format all files and check if valid
+  const checkedFiles = await Promise.all(resolvedPaths.map(checkFile));
+
+  if (onlyPrintFormatted) {
+    for (const checkedFile of checkedFiles) {
+      console.log(checkedFile.formatted);
+      console.log('\n');
+    }
+  }
+
+  if (writeDecklists) {
+    await Promise.all(checkedFiles.map(({filePath, formatted}) => writeFile(filePath, formatted)));
+  }
+
+  if (checkFormat)  {
+    const allValid = checkedFiles.reduce((acc, curr) => acc && curr.valid, true);
+    return allValid ? 0 : 1;
+  }
+
+  return 0;
+}
+
+main().then(r => process.exit(r));

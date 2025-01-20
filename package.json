@@ -3,11 +3,15 @@
   "version": "1.0.1",
   "description": "Formats and checks the format of MTGO txt deck lists",
   "main": "format.js",
+  "type": "module",
   "bin" : {
     "mtgo-deck-formatter": "./format.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "engines" : {
+    "node" : ">=18"
   },
   "repository": {
     "type": "git",
