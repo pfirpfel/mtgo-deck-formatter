@@ -5,7 +5,7 @@ const fs = require('fs');
 
 function usage() {
   const usage = `Formats mtgo txt deck lists
-Usage: node format.js decklist.txt another-list.txt ...
+Usage: node format.js [-h] [-c] [-p] decklist.txt another-list.txt ...
 Default behaviour overwrites the supplied files with their formatted version.
 -h, --help: show this help text
 -c, --check: check format of all supplied decklists, exits with error if at least one list has invalid format
@@ -58,28 +58,41 @@ function format(decklist) {
   return formatted + newLineCharacter;
 }
 
-if (process.argv.length <= 2) {
-  console.log('Provide at least one deck list to format!')
-  usage();
+function handleArguments() {
+  if (process.argv.length <= 2) {
+    console.log('Provide at least one deck list to format!')
+    usage();
+    process.exit();
+  }
+
+  let arguments = process.argv.slice(2);
+  if (arguments[0] === '-h' || arguments[0] === '--help') {
+    usage();
+    process.exit();
+  }
+
+  let checkFormat = false;
+  if (arguments[0] === '-c' || arguments[0] === '--check') {
+    checkFormat = true;
+    arguments = arguments.slice(1);
+  }
+
+  let onlyPrintFormatted = false;
+  if (arguments[0] === '-p' || arguments[0] === '--print') {
+    onlyPrintFormatted = true;
+    arguments = arguments.slice(1);
+  }
+
+  return {
+    arguments,
+    checkFormat,
+    onlyPrintFormatted
+  };
 }
 
-let arguments = process.argv.slice(2);
-if (arguments[0] === '-h' || arguments[0] === '--help') {
-  usage();
-  process.exit();
-}
-let checkFormat = false;
+const {arguments, checkFormat, onlyPrintFormatted} = handleArguments();
+
 let formatValid = true;
-if (arguments[0] === '-c' || arguments[0] === '--check') {
-  checkFormat = true;
-  arguments = arguments.slice(1);
-}
-let onlyPrintFormatted = false;
-if (arguments[0] === '-p' || arguments[0] === '--print') {
-  onlyPrintFormatted = true;
-  arguments = arguments.slice(1);
-}
-
 for (let filepath of arguments) {
   const resolvedPath = path.resolve(filepath);
   // check if file exists
