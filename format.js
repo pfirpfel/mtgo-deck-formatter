@@ -151,8 +151,11 @@ async function main(){
   }
 
   if (checkFormat)  {
-    const allValid = checkedFiles.reduce((acc, curr) => acc && curr.valid, true);
-    return allValid ? 0 : 1;
+    const invalidFiles = checkedFiles.filter(({valid}) => !valid);
+    invalidFiles.forEach(({filePath}) => {
+      console.error(`Invalid format: ${filePath}`)
+    });
+    return invalidFiles.length === 0 ? 0 : 1;
   }
 
   return 0;
