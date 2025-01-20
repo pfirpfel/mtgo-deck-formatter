@@ -1,17 +1,17 @@
 {
   "name": "mtgo-deck-formatter",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "Formats and checks the format of MTGO txt deck lists",
   "main": "format.js",
   "type": "module",
-  "bin" : {
+  "bin": {
     "mtgo-deck-formatter": "./format.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "engines" : {
-    "node" : ">=18"
+  "engines": {
+    "node": ">=18"
   },
   "repository": {
     "type": "git",
