@@ -1,6 +1,6 @@
 {
   "name": "mtgo-deck-formatter",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Formats and checks the format of MTGO txt deck lists",
   "main": "format.js",
   "type": "module",
