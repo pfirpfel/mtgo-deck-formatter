@@ -5,13 +5,13 @@ Since the sort order of MTGO txt list is not alphabetical, versioning these file
 This tools sorts the cards in the deck lists, while keeping main board and side board intact.
 
 ## Requirements
-- NodeJS
+- NodeJS (>=18)
 
 ## Installation
 `npm install -g mtgo-deck-formatter`
 
 ## Usage
-- `mtgo-deck-formatter decklist.txt another-decklist.txt ...`
+- `mtgo-deck-formatter -w decklist.txt another-decklist.txt ...` (or `--write`)
   
   Sorts the deck list alphabetically (ignores card amounts) and overwrites the existing file.
   
